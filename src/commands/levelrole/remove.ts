@@ -9,14 +9,24 @@ import { COLORS } from '../../config/constants.js';
 
 export const data = new SlashCommandBuilder()
   .setName('levelrole-remove')
-  .setDescription('Remove a level-role reward milestone')
-  .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles)
+  .setDescription('👑 [Admin Only] Remove a level-role reward milestone')
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  .setDMPermission(false)
   .addIntegerOption((option) =>
     option.setName('level').setDescription('The level milestone to remove').setRequired(true).setMinValue(1)
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   if (!interaction.guildId) return;
+
+  // Strict Runtime Administrator Permission Enforcement
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    await interaction.reply({
+      content: '🚫 **Access Denied**: Only server **Administrators** can use `/levelrole-remove`.',
+      ephemeral: true,
+    });
+    return;
+  }
 
   const level = interaction.options.getInteger('level', true);
   const existing = await levelRoleRepository.findByGuildAndLevel(interaction.guildId, level);

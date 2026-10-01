@@ -11,11 +11,21 @@ import { COLORS } from '../../config/constants.js';
 
 export const data = new SlashCommandBuilder()
   .setName('xpstats')
-  .setDescription('View server-wide activity statistics and XP distribution')
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+  .setDescription('👑 [Admin Only] View server-wide activity statistics and XP distribution')
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  .setDMPermission(false);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   if (!interaction.guildId) return;
+
+  // Strict Runtime Administrator Permission Enforcement
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    await interaction.reply({
+      content: '🚫 **Access Denied**: Only server **Administrators** can use `/xpstats`.',
+      ephemeral: true,
+    });
+    return;
+  }
 
   const totalUsers = await userRepository.countGuildUsers(interaction.guildId);
   const topUsers = await userRepository.getLeaderboard(interaction.guildId, 'totalXP', 10, 0);

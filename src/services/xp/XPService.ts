@@ -359,6 +359,52 @@ export class XPService {
   }
 
   /**
+   * Deduct / Take XP from a member (admin command)
+   */
+  public async deductXP(params: {
+    guildId: string;
+    discordUserId: string;
+    amount: number;
+    reason: string;
+    member?: GuildMember | null;
+  }): Promise<{
+    oldXP: number;
+    newXP: number;
+    oldLevel: number;
+    newLevel: number;
+    deductedAmount: number;
+    user: UserRecord;
+  }> {
+    const { guildId, discordUserId, amount, reason, member } = params;
+    const lockKey = `${guildId}:${discordUserId}`;
+    return this.acquireLock(lockKey, async () => {
+      const user = await userRepository.getOrCreate(guildId, discordUserId);
+      const oldXP = user.totalXP;
+      const oldLevel = user.level;
+      const actualDeduction = Math.min(oldXP, Math.max(0, amount));
+      const newXP = Math.max(0, oldXP - actualDeduction);
+      const newLevel = levelService.getLevelFromXP(newXP);
+
+      const updated = await userRepository.setXP(guildId, discordUserId, newXP, newLevel);
+      await xpRepository.recordTransaction(guildId, user.id, XPSource.ADMIN, -actualDeduction, reason);
+
+      // If user's level decreased, re-sync level roles
+      if (newLevel < oldLevel && member) {
+        await levelRoleService.processLevelRoles(guildId, member, newLevel);
+      }
+
+      return {
+        oldXP,
+        newXP,
+        oldLevel,
+        newLevel,
+        deductedAmount: actualDeduction,
+        user: updated,
+      };
+    });
+  }
+
+  /**
    * Set user Level directly (admin command)
    */
   public async setLevel(

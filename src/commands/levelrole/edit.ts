@@ -9,8 +9,9 @@ import { COLORS } from '../../config/constants.js';
 
 export const data = new SlashCommandBuilder()
   .setName('levelrole-edit')
-  .setDescription('Edit the Discord role assigned for an existing level milestone')
-  .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles)
+  .setDescription('👑 [Admin Only] Edit the Discord role assigned for an existing level milestone')
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  .setDMPermission(false)
   .addIntegerOption((option) =>
     option.setName('level').setDescription('The level milestone to edit').setRequired(true).setMinValue(1)
   )
@@ -20,6 +21,15 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   if (!interaction.guildId || !interaction.guild) return;
+
+  // Strict Runtime Administrator Permission Enforcement
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    await interaction.reply({
+      content: '🚫 **Access Denied**: Only server **Administrators** can use `/levelrole-edit`.',
+      ephemeral: true,
+    });
+    return;
+  }
 
   const level = interaction.options.getInteger('level', true);
   const role = interaction.options.getRole('role', true);

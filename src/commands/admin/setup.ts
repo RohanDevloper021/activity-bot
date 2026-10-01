@@ -10,11 +10,21 @@ import { COLORS } from '../../config/constants.js';
 
 export const data = new SlashCommandBuilder()
   .setName('setup')
-  .setDescription('View current server Activity Engine configuration and setup status')
-  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator);
+  .setDescription('👑 [Admin Only] View current server Activity Engine configuration and setup status')
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  .setDMPermission(false);
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   if (!interaction.guildId) return;
+
+  // Strict Runtime Administrator Permission Enforcement
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    await interaction.reply({
+      content: '🚫 **Access Denied**: Only server **Administrators** can use `/setup`.',
+      ephemeral: true,
+    });
+    return;
+  }
 
   const config = await guildConfigRepository.getOrCreate(interaction.guildId);
   const roles = await levelRoleRepository.listByGuild(interaction.guildId);

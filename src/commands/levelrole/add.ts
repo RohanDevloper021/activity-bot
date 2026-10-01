@@ -9,8 +9,9 @@ import { COLORS } from '../../config/constants.js';
 
 export const data = new SlashCommandBuilder()
   .setName('levelrole-add')
-  .setDescription('Add a new milestone role awarded when a member reaches a specific level')
-  .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles)
+  .setDescription('👑 [Admin Only] Add a new milestone role awarded when a member reaches a level')
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  .setDMPermission(false)
   .addIntegerOption((option) =>
     option.setName('level').setDescription('The level required to earn this role').setRequired(true).setMinValue(1)
   )
@@ -20,6 +21,15 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   if (!interaction.guildId || !interaction.guild) return;
+
+  // Strict Runtime Administrator Permission Enforcement
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    await interaction.reply({
+      content: '🚫 **Access Denied**: Only server **Administrators** can use `/levelrole-add`.',
+      ephemeral: true,
+    });
+    return;
+  }
 
   const level = interaction.options.getInteger('level', true);
   const role = interaction.options.getRole('role', true);

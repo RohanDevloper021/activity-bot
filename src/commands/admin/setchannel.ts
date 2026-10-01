@@ -10,8 +10,9 @@ import { COLORS } from '../../config/constants.js';
 
 export const data = new SlashCommandBuilder()
   .setName('setchannel')
-  .setDescription('Set the designated channel for Level-Up rank card celebrations')
+  .setDescription('👑 [Admin Only] Set the designated channel for Level-Up rank card celebrations')
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  .setDMPermission(false)
   .addChannelOption((option) =>
     option
       .setName('channel')
@@ -33,6 +34,15 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   if (!interaction.guildId) return;
+
+  // Strict Runtime Administrator Permission Enforcement
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    await interaction.reply({
+      content: '🚫 **Access Denied**: Only server **Administrators** can use `/setchannel`.',
+      ephemeral: true,
+    });
+    return;
+  }
 
   const channel = interaction.options.getChannel('channel');
   const channelId = channel ? channel.id : null;

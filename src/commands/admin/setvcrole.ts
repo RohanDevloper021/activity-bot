@@ -9,8 +9,9 @@ import { COLORS } from '../../config/constants.js';
 
 export const data = new SlashCommandBuilder()
   .setName('setvcrole')
-  .setDescription('Set the temporary role given to members while active in Voice Channels')
+  .setDescription('👑 [Admin Only] Set the temporary role given to members while active in Voice Channels')
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  .setDMPermission(false)
   .addRoleOption((option) =>
     option
       .setName('role')
@@ -20,6 +21,15 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   if (!interaction.guildId) return;
+
+  // Strict Runtime Administrator Permission Enforcement
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    await interaction.reply({
+      content: '🚫 **Access Denied**: Only server **Administrators** can use `/setvcrole`.',
+      ephemeral: true,
+    });
+    return;
+  }
 
   const role = interaction.options.getRole('role');
   const roleId = role ? role.id : null;

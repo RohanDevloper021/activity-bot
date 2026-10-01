@@ -9,8 +9,9 @@ import { COLORS } from '../../config/constants.js';
 
 export const data = new SlashCommandBuilder()
   .setName('resetxp')
-  .setDescription('Reset XP for a specific member or the entire server')
+  .setDescription('👑 [Admin Only] Reset XP for a specific member or the entire server')
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  .setDMPermission(false)
   .addUserOption((option) =>
     option
       .setName('target')
@@ -26,6 +27,15 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   if (!interaction.guildId) return;
+
+  // Strict Runtime Administrator Permission Enforcement
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    await interaction.reply({
+      content: '🚫 **Access Denied**: Only server **Administrators** can use `/resetxp`.',
+      ephemeral: true,
+    });
+    return;
+  }
 
   const targetUser = interaction.options.getUser('target');
   const confirmEntireServer = interaction.options.getBoolean('confirm_entire_server');

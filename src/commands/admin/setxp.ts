@@ -9,8 +9,9 @@ import { COLORS } from '../../config/constants.js';
 
 export const data = new SlashCommandBuilder()
   .setName('setxp')
-  .setDescription('Set a user’s total XP (triggers level-up rank card if level increases)')
+  .setDescription('👑 [Admin Only] Set a user’s total XP directly')
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  .setDMPermission(false)
   .addUserOption((option) =>
     option.setName('target').setDescription('The target member to update').setRequired(true)
   )
@@ -20,6 +21,15 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   if (!interaction.guildId || !interaction.guild) return;
+
+  // Strict Runtime Administrator Permission Enforcement
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    await interaction.reply({
+      content: '🚫 **Access Denied**: Only server **Administrators** can use `/setxp`.',
+      ephemeral: true,
+    });
+    return;
+  }
 
   const targetUser = interaction.options.getUser('target', true);
   const newXP = interaction.options.getInteger('xp', true);

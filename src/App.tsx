@@ -190,6 +190,12 @@ export default function App() {
   const [simAFK, setSimAFK] = useState(false);
   const [simVoiceResult, setSimVoiceResult] = useState<any>(null);
 
+  // Admin XP Controls State (Give & Take XP)
+  const [adminAmount, setAdminAmount] = useState(250);
+  const [adminReason, setAdminReason] = useState('Staff reward');
+  const [adminActionResult, setAdminActionResult] = useState<any>(null);
+  const [adminActionLoading, setAdminActionLoading] = useState(false);
+
   const guildId = activeGuildId;
 
   // Fetch initial data
@@ -434,6 +440,44 @@ export default function App() {
       fetchData();
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const handleAdminGiveXP = async () => {
+    if (!simUserId) return;
+    setAdminActionLoading(true);
+    try {
+      const res = await fetch(`/api/guilds/${guildId}/admin/give-xp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: simUserId, amount: adminAmount, reason: adminReason }),
+      });
+      const data = await res.json();
+      setAdminActionResult({ type: 'give', ...data });
+      fetchData();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setAdminActionLoading(false);
+    }
+  };
+
+  const handleAdminTakeXP = async () => {
+    if (!simUserId) return;
+    setAdminActionLoading(true);
+    try {
+      const res = await fetch(`/api/guilds/${guildId}/admin/take-xp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: simUserId, amount: adminAmount, reason: adminReason }),
+      });
+      const data = await res.json();
+      setAdminActionResult({ type: 'take', ...data });
+      fetchData();
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setAdminActionLoading(false);
     }
   };
 
@@ -1831,6 +1875,102 @@ export default function App() {
                     )}
                   </div>
                 </div>
+
+                {/* Card 3: Admin XP Controls (Give & Take XP) */}
+                <div className="p-4 rounded-xl bg-neutral-950 border border-neutral-800 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-amber-400" />
+                        Admin-Only Live XP Controls (Give &amp; Take XP)
+                      </h3>
+                      <p className="text-xs text-neutral-400">
+                        Simulate or execute Discord Administrator commands: <code>/givexp</code> and <code>/takexp</code>
+                      </p>
+                    </div>
+                    <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      ADMIN ONLY
+                    </span>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div>
+                      <label className="text-neutral-400 block mb-1">XP Amount</label>
+                      <input
+                        type="number"
+                        min="1"
+                        value={adminAmount}
+                        onChange={(e) => setAdminAmount(Math.max(1, parseInt(e.target.value) || 1))}
+                        className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-white font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-neutral-400 block mb-1">Reason / Note</label>
+                      <input
+                        type="text"
+                        value={adminReason}
+                        onChange={(e) => setAdminReason(e.target.value)}
+                        placeholder="e.g. Event winner, Role violation, Manual sync"
+                        className="w-full bg-neutral-900 border border-neutral-800 rounded-lg px-3 py-2 text-white"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      type="button"
+                      disabled={adminActionLoading || !simUserId}
+                      onClick={handleAdminGiveXP}
+                      className="flex-1 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>Give XP (/givexp)</span>
+                    </button>
+                    <button
+                      type="button"
+                      disabled={adminActionLoading || !simUserId}
+                      onClick={handleAdminTakeXP}
+                      className="flex-1 py-2 bg-rose-600 hover:bg-rose-500 text-white rounded-lg text-xs font-semibold transition flex items-center justify-center gap-1.5 disabled:opacity-50"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Take XP (/takexp)</span>
+                    </button>
+                  </div>
+
+                  {adminActionResult && (
+                    <div
+                      className={`p-3 rounded-lg border text-xs font-mono space-y-1 ${
+                        adminActionResult.type === 'give'
+                          ? 'bg-emerald-950/40 border-emerald-800/80 text-emerald-300'
+                          : 'bg-rose-950/40 border-rose-800/80 text-rose-300'
+                      }`}
+                    >
+                      <div className="font-bold flex items-center gap-1.5">
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        <span>
+                          {adminActionResult.type === 'give'
+                            ? `GAVE +${adminAmount} XP`
+                            : `TOOK -${adminAmount} XP`} TO/FROM USER
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-neutral-300">
+                        {adminActionResult.type === 'give' ? (
+                          <>
+                            New XP: {adminActionResult.result?.newXP?.toLocaleString()} | Level:{' '}
+                            {adminActionResult.result?.newLevel}
+                            {adminActionResult.result?.leveledUp && ' (🎉 LEVELED UP!)'}
+                          </>
+                        ) : (
+                          <>
+                            Old XP: {adminActionResult.result?.oldXP?.toLocaleString()} ➔ New XP:{' '}
+                            {adminActionResult.result?.newXP?.toLocaleString()} (Level{' '}
+                            {adminActionResult.result?.newLevel})
+                          </>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -2149,10 +2289,10 @@ export default function App() {
                           <div className="flex justify-between py-1 border-b border-neutral-800/80">
                             <span className="text-neutral-400">Build Command:</span>
                             <div className="flex items-center gap-1.5">
-                              <code className="text-emerald-400 font-mono text-[11px]">npm install && npm run build</code>
+                              <code className="text-emerald-400 font-mono text-[11px]">npm install --legacy-peer-deps && npm run build</code>
                               <button
                                 type="button"
-                                onClick={() => copySnippet('npm install && npm run build', 'build-cmd')}
+                                onClick={() => copySnippet('npm install --legacy-peer-deps && npm run build', 'build-cmd')}
                                 className="p-1 hover:text-white text-neutral-400"
                               >
                                 {copiedSnippet === 'build-cmd' ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
@@ -2225,7 +2365,7 @@ export default function App() {
     name: activity-engine
     env: node
     plan: free
-    buildCommand: npm install && npm run build
+    buildCommand: npm install --legacy-peer-deps && npm run build
     startCommand: npm run start
     healthCheckPath: /health
     envVars:

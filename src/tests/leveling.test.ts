@@ -139,4 +139,44 @@ describe('Level Progression & Role Rewards System', () => {
       expect(syncResult.removedRoles).toContain('role-5');
     });
   });
+
+  describe('Admin Give & Take XP Operations', () => {
+    it('accurately gives XP and takes XP with atomic level adjustments', async () => {
+      const { xpService } = await import('../services/xp/XPService.js');
+      const userId = 'user-admin-adjust-1';
+
+      // 1. Give XP
+      const giveResult = await xpService.awardXP({
+        guildId,
+        discordUserId: userId,
+        amount: 500,
+        source: 'ADMIN' as any,
+        reason: 'Bonus award',
+      });
+      expect(giveResult.newXP).toBe(500);
+      expect(giveResult.newLevel).toBeGreaterThanOrEqual(1);
+
+      // 2. Take XP (deduct 200 XP)
+      const takeResult = await xpService.deductXP({
+        guildId,
+        discordUserId: userId,
+        amount: 200,
+        reason: 'Penalty deduction',
+      });
+      expect(takeResult.oldXP).toBe(500);
+      expect(takeResult.newXP).toBe(300);
+      expect(takeResult.deductedAmount).toBe(200);
+
+      // 3. Deducting more XP than user has clamps to 0 (never negative)
+      const excessDeduct = await xpService.deductXP({
+        guildId,
+        discordUserId: userId,
+        amount: 1000,
+        reason: 'Excess penalty',
+      });
+      expect(excessDeduct.newXP).toBe(0);
+      expect(excessDeduct.newLevel).toBe(0);
+      expect(excessDeduct.deductedAmount).toBe(300);
+    });
+  });
 });

@@ -3,6 +3,9 @@ import type { ChatInputCommandInteraction } from 'discord.js';
 import * as setupCmd from '../commands/admin/setup.js';
 import * as setxpCmd from '../commands/admin/setxp.js';
 import * as addxpCmd from '../commands/admin/addxp.js';
+import * as givexpCmd from '../commands/admin/givexp.js';
+import * as takexpCmd from '../commands/admin/takexp.js';
+import * as removexpCmd from '../commands/admin/removexp.js';
 import * as setlevelCmd from '../commands/admin/setlevel.js';
 import * as setchannelCmd from '../commands/admin/setchannel.js';
 import * as setvcroleCmd from '../commands/admin/setvcrole.js';
@@ -35,6 +38,9 @@ const allCommandModules = [
   setupCmd,
   setxpCmd,
   addxpCmd,
+  givexpCmd,
+  takexpCmd,
+  removexpCmd,
   setlevelCmd,
   setchannelCmd,
   setvcroleCmd,

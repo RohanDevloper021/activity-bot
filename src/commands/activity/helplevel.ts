@@ -51,15 +51,18 @@ export function buildHelpPayload(category: string = 'all', botAvatarUrl?: string
 
   if (category === 'all' || category === 'admin') {
     embed.addFields({
-      name: '⚙️ Admin & Server Configuration (Requires Administrator)',
+      name: '👑 Admin Commands (Strict Administrator Permission Required)',
       value: [
+        '`/givexp <target> <amount> [reason]` — 🎁 Give XP to a member (triggers level-up & role unlocks).',
+        '`/takexp <target> <amount> [reason]` — ⚠️ Take / deduct XP from a member (penalties / adjustments).',
+        '`/removexp <target> <amount> [reason]` — Alias for `/takexp`.',
+        '`/setxp <target> <xp>` — Set a member\'s total XP directly.',
+        '`/setlevel <target> <level>` — Set a member\'s level directly (0 to 300, syncs roles).',
+        '`/addxp <target> <amount>` — Add bonus XP to a member.',
+        '`/resetxp [target] [confirm]` — Reset XP for a specific member or entire server.',
         '`/setup` — View server XP multipliers, cooldowns, voice settings, and channels.',
-        '`/setchannel <channel> [frequency]` — Configure dedicated level-up announcement channel and milestone frequency.',
-        '`/addxp <target> <amount>` — Award bonus XP to a member (triggers level-up rank card if level increases).',
-        '`/setxp <target> <xp>` — Set a user\'s total XP directly (triggers level-up rank card if level increases).',
-        '`/setlevel <target> <level>` — Set a user\'s level directly (triggers rank card & syncs roles).',
-        '`/setvcrole <role>` — Assign an automatic role to members while actively in a voice channel.',
-        '`/resetxp <target>` — Reset XP for a specific member or all server members.',
+        '`/setchannel [channel] [frequency]` — Configure level-up channel and celebration frequency.',
+        '`/setvcrole [role]` — Configure temporary role given while in voice channels.',
         '`/xpstats` — View server-wide stats, total XP awarded, and anti-abuse logs.',
       ].join('\n'),
       inline: false,

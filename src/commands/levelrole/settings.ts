@@ -9,8 +9,9 @@ import { COLORS } from '../../config/constants.js';
 
 export const data = new SlashCommandBuilder()
   .setName('levelrole-settings')
-  .setDescription('Configure level-role award behavior')
-  .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles)
+  .setDescription('👑 [Admin Only] Configure level-role award behavior')
+  .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  .setDMPermission(false)
   .addBooleanOption((option) =>
     option
       .setName('remove_previous')
@@ -20,6 +21,15 @@ export const data = new SlashCommandBuilder()
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   if (!interaction.guildId) return;
+
+  // Strict Runtime Administrator Permission Enforcement
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    await interaction.reply({
+      content: '🚫 **Access Denied**: Only server **Administrators** can use `/levelrole-settings`.',
+      ephemeral: true,
+    });
+    return;
+  }
 
   const removePrevious = interaction.options.getBoolean('remove_previous', true);
 

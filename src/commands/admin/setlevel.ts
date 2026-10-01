@@ -9,17 +9,27 @@ import { COLORS } from '../../config/constants.js';
 
 export const data = new SlashCommandBuilder()
   .setName('setlevel')
-  .setDescription('Set a user’s level directly (triggers rank card and rewards)')
+  .setDescription('👑 [Admin Only] Set a user’s level directly (0 to 300)')
   .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
+  .setDMPermission(false)
   .addUserOption((option) =>
     option.setName('target').setDescription('The target member to update').setRequired(true)
   )
   .addIntegerOption((option) =>
-    option.setName('level').setDescription('The new level to assign (1 to 300)').setRequired(true).setMinValue(0).setMaxValue(300)
+    option.setName('level').setDescription('The new level to assign (0 to 300)').setRequired(true).setMinValue(0).setMaxValue(300)
   );
 
 export async function execute(interaction: ChatInputCommandInteraction) {
   if (!interaction.guildId || !interaction.guild) return;
+
+  // Strict Runtime Administrator Permission Enforcement
+  if (!interaction.memberPermissions?.has(PermissionFlagsBits.Administrator)) {
+    await interaction.reply({
+      content: '🚫 **Access Denied**: Only server **Administrators** can use `/setlevel`.',
+      ephemeral: true,
+    });
+    return;
+  }
 
   const targetUser = interaction.options.getUser('target', true);
   const targetLevel = interaction.options.getInteger('level', true);
