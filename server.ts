@@ -486,6 +486,51 @@ async function startServer() {
     res.json(transactions);
   });
 
+  // 12.1. Admin Give XP Route
+  app.post('/api/guilds/:guildId/admin/give-xp', async (req, res) => {
+    const targetGuild = getDiscordGuild(req.params.guildId);
+    const effectiveGuildId = targetGuild ? targetGuild.id : req.params.guildId;
+    const { userId, amount, reason } = req.body;
+
+    if (!userId || !amount || amount <= 0) {
+      return res.status(400).json({ error: 'Valid userId and positive amount are required' });
+    }
+
+    const member = targetGuild ? await targetGuild.members.fetch(userId).catch(() => null) : null;
+    const result = await xpService.awardXP({
+      guildId: effectiveGuildId,
+      discordUserId: userId,
+      amount: Number(amount),
+      source: XPSource.ADMIN,
+      reason: reason || 'Admin grant from Dashboard',
+      member,
+    });
+
+    res.json({ success: true, result });
+  });
+
+  // 12.2. Admin Take XP Route
+  app.post('/api/guilds/:guildId/admin/take-xp', async (req, res) => {
+    const targetGuild = getDiscordGuild(req.params.guildId);
+    const effectiveGuildId = targetGuild ? targetGuild.id : req.params.guildId;
+    const { userId, amount, reason } = req.body;
+
+    if (!userId || !amount || amount <= 0) {
+      return res.status(400).json({ error: 'Valid userId and positive amount are required' });
+    }
+
+    const member = targetGuild ? await targetGuild.members.fetch(userId).catch(() => null) : null;
+    const result = await xpService.deductXP({
+      guildId: effectiveGuildId,
+      discordUserId: userId,
+      amount: Number(amount),
+      reason: reason || 'Admin deduction from Dashboard',
+      member,
+    });
+
+    res.json({ success: true, result });
+  });
+
   // 13. Interactive Chat Activity Simulator
   app.post('/api/guilds/:guildId/simulate-chat', async (req, res) => {
     const targetGuild = getDiscordGuild(req.params.guildId);
